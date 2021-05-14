@@ -2,16 +2,15 @@ name: singularity-deploy
 
 on:
   push:
-    # This branch does not exist! You should update this to be your "production" branch
-    # and ensure that when you work on recipes you only merge to this branch when it's time to release
-    # You can also use another GitHub trigger entirely
     branches:
-      - "main-branch"
+      - "main"
 
 jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    env:
+      WF_NAME: .github/workflows/builder.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -21,24 +20,27 @@ jobs:
             git fetch --tags
             latest_tag=$(git tag | tail -1)
             echo "latest_tag=$latest_tag" >> $GITHUB_ENV
-
       - name: Define Repository Name and Release Version
         run: |
             repo=$(echo "${GITHUB_REPOSITORY/\//-}")
             release=$(cat VERSION)
             echo "reponame=$repo" >> $GITHUB_ENV
             echo "release_tag=$release" >> $GITHUB_ENV
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Define Recipes
         if: ${{ env.release_tag != env.latest_tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.release_tag }}
-          release_name: Release ${{ env.release_tag }}
-          draft: false
-          prerelease: false
+        run: |
+            start_commit=${latest_tag}
+            if [ "${start_commit}" != "" ]; then
+              WF_FILE_CHANGE=$(git diff --diff-filter=AM --name-only ${start_commit} HEAD | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
+            fi
+
+            if [[ "${start_commit}" == "" || "${WF_FILE_CHANGE}" != "" ]]; then
+              recipes=$(find . -type f -regextype posix-extended -regex ".*/Singularity(\..*)?")
+              #recipes=$(find . -type f \( -name "Singularity.*" -o -name "Singularity" \))
+            else
+              recipes=$(git diff --diff-filter=AM --name-only ${start_commit} HEAD | { grep "Singularity" || [[ $? == 1 ]]; })
+            fi
+            echo "recipes=${recipes}" >> $GITHUB_ENV
       - uses: eWaterCycle/setup-singularity@v6
         if: ${{ env.release_tag != env.latest_tag }}
         with:
@@ -46,32 +48,46 @@ jobs:
       - name: Build the singularity container
         if: ${{ env.release_tag != env.latest_tag }}
         run: |
-            repo=$(echo "${GITHUB_REPOSITORY/\//-}")
-
-            # For each Singularity* container, build based on the prefix (tag) 
-            for recipe in $(ls Singularity*); do
+            # For each Singularity* container, build based on the prefix (tag)
+            for recipe in ${recipes}; do
                 echo "Building $recipe"
-                tag=$(echo "${recipe/Singularity\./}")
+                tag=$(echo "${recipe/*Singularity\./}")
                 # If we find empty, use latest
-                if [ "$tag" == "Singularity" ]; then
-                    tag=latest
+                if [ "$tag" == "${recipe}" ]; then
+                    tag="latest"
                 fi
                 # Build the container and name by tag
                 echo "Tag is $tag."
-                container="$repo:$tag.sif"
+                container="$reponame:$tag.sif"
                 singularity build --fakeroot container.sif "$recipe"
                 if [ "$?" == "0" ]; then
-                    echo "Successfully built container $container."                
+                    echo "Successfully built container $container."
                     mv container.sif "$container"
                 else
-                    echo "There was an issue building $container."          
+                    echo "There was an issue building $container."
                 fi
             done
-      - name: Upload Release Assets
+      - name: Check images built
         if: ${{ env.release_tag != env.latest_tag }}
+        run: |
+            images_built=$(find . -type f -name "*.sif")
+            echo "images_built=$images_built" >> $GITHUB_ENV
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        if: ${{ env.images_built != '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        with:
+          tag_name: ${{ env.release_tag }}
+          release_name: Release ${{ env.release_tag }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Assets
+        if: ${{ env.images_built != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           tag_name: ${{ env.release_tag }}
         run: |
-          hub release edit $(find . -type f -name "*.sif" -printf "-a %p ") -m "" "$tag_name" 
+          hub release edit $(for image in $images_built; do echo "-a $image"; done) -m "" "$tag_name"

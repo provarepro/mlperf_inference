@@ -8,34 +8,51 @@ jobs:
   builder:
     name: Test Container Builds
     runs-on: ubuntu-latest
+    env:
+      WF_NAME: .github/workflows/test.yml
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Define Repository Name
+        run: |
+            repo=$(echo "${GITHUB_REPOSITORY/\//-}")
+            echo "reponame=$repo" >> $GITHUB_ENV
+      - name: Define Recipes
+        run: |
+            git fetch
+            #Check all the file changes since last commit
+            start_commit=$(git log origin/${{ github.head_ref }} --oneline --format=%H -n 2 | tail -1)
+
+            #If workflow changed in the last commit build all the container starting from beginning of the "branch"
+            WF_FILE_CHANGE=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
+            if [ "${WF_FILE_CHANGE}" != "" ]; then
+              start_commit="$(git rev-list -n 1 origin/main)"
+            fi
+            recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
+            echo "recipes=${recipes}" >> $GITHUB_ENV
       - uses: eWaterCycle/setup-singularity@v6
         with:
           singularity-version: 3.7.1
       - name: Build the singularity containers
         run: |
-            repo=$(echo "${GITHUB_REPOSITORY/\//-}")
-
-            # For each Singularity* container, build based on the prefix (tag) 
-            for recipe in $(ls Singularity*); do
-                echo "Building $recipe"
-                tag=$(echo "${recipe/Singularity\./}")
+            # For each Singularity* container, build based on the prefix (tag)
+            for recipe in ${recipes}; do
+                echo "Building ${recipe}"
+                tag=$(echo "${recipe/*Singularity\./}")
                 # If we find empty, use latest
-                if [ "$tag" == "Singularity" ]; then
-                    tag=latest
+                if [ "$tag" == "$recipe" ]; then
+                    tag="latest"
                 fi
                 # Build the container and name by tag
                 echo "Tag is $tag."
-                container="$repo:$tag.sif"
+                container="$reponame:$tag.sif"
                 singularity build --fakeroot container.sif "$recipe"
                 if [ "$?" == "0" ]; then
-                    echo "Successfully built container $container."                
+                    echo "Successfully built container $container."
                     mv container.sif "$container"
                 else
-                    echo "There was an issue building $container."          
-                fi                
+                    echo "There was an issue building $container."
+                fi
             done
       - name: Run Additional Tests
         run: |
