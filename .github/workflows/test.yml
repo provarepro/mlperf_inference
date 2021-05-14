@@ -20,16 +20,16 @@ jobs:
       - name: Define Recipes
         run: |
             git fetch
-            #Check all the file changes since last commit
-            start_commit=$(git log origin/${{ github.head_ref }} --oneline --format=%H -n 2 | tail -1)
-
-            #If workflow changed in the last commit build all the container starting from beginning of the "branch"
-            WF_FILE_CHANGE=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
-            if [ "${WF_FILE_CHANGE}" != "" ]; then
-              start_commit="$(git rev-list -n 1 origin/main)"
-            fi
+            ##Check all the file changes since last commit
+            #start_commit=$(git log origin/${{ github.head_ref }} --oneline --format=%H -n 2 | tail -1)
+            ##If workflow changed in the last commit build all the container starting from beginning of the "branch"
+            #WF_FILE_CHANGE=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
+            #if [ "${WF_FILE_CHANGE}" != "" ]; then
+            #  start_commit="$(git rev-list -n 1 origin/main)"
+            #fi
+            start_commit="$(git rev-list -n 1 origin/main)"
             recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
-            echo "recipes=${recipes}" >> $GITHUB_ENV
+            echo "recipes='${recipes}'" >> $GITHUB_ENV
       - uses: eWaterCycle/setup-singularity@v6
         with:
           singularity-version: 3.7.1
