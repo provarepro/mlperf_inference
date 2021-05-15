@@ -17,7 +17,7 @@ jobs:
         run: |
             repo=$(echo "${GITHUB_REPOSITORY/\//-}")
             echo "reponame=$repo" >> $GITHUB_ENV
-      - name: Define Recipes
+      - name: Define Start Commit
         run: |
             git fetch
             ##Check all the file changes since last commit
@@ -28,15 +28,13 @@ jobs:
             #  start_commit="$(git rev-list -n 1 origin/main)"
             #fi
             start_commit="$(git rev-list -n 1 origin/main)"
-            #echo "start_commit=${start_commit}" >> $GITHUB_ENV
-            recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
-            echo -e "recipes=\"${recipes}\"" >> $GITHUB_ENV
+            echo "start_commit=${start_commit}" >> $GITHUB_ENV
       - uses: eWaterCycle/setup-singularity@v6
         with:
           singularity-version: 3.7.1
       - name: Build the singularity containers
         run: |
-            #recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
+            recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
             # For each Singularity* container, build based on the prefix (tag)
             for recipe in ${recipes}; do
                 echo "Building ${recipe}"

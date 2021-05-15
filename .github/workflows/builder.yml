@@ -26,7 +26,7 @@ jobs:
             release=$(cat VERSION)
             echo "reponame=$repo" >> $GITHUB_ENV
             echo "release_tag=$release" >> $GITHUB_ENV
-      - name: Define Recipes
+      - name: Define Start Commit
         if: ${{ env.release_tag != env.latest_tag }}
         run: |
             start_commit=${latest_tag}
