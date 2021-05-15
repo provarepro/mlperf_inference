@@ -76,7 +76,7 @@ jobs:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
-        if: ${{ env.images_built == 'true' }}
+        if: ${{ env.image_built == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -85,7 +85,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Upload Release Assets
-        if: ${{ env.images_built == 'true' }}
+        if: ${{ env.image_built == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           upload_url: ${{ steps.create_release.outputs.upload_url }}
