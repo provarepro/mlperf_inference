@@ -31,7 +31,7 @@ USER root
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHON_VERSION="3.6"
+    PYTHON_VERSION="3.8"
 
 WORKDIR /
 
@@ -45,6 +45,17 @@ RUN apt-get update && \
         libicu-dev \
         libbz2-dev \
         liblzma-dev && \
+    update-alternatives \
+        --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-7 \
+        --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-7 \
+        --slave /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-7 \
+        --slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-7 \
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-7 \
+        --slave /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-7 \
+        --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-7 && \
+    update-alternatives \
+        --install /usr/bin/cpp cpp /usr/bin/cpp-7 70 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
