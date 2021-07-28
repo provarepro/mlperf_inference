@@ -7,7 +7,7 @@ ARG BASEOS_VER="ubuntu20"
 
 ARG BASE_IMAGE=provarepro/openvino:${OV_VER}_${HW_VER}_${THREAD_VER}-${PY_VER}-${GCC_VER}-${BASEOS_VER}
 
-FROM openvino/${BASEOS_VER}_dev:${OV_VER} as builder
+FROM openvino/ubuntu18_dev:${OV_VER} as builder
 
 WORKDIR /tmp
 
