@@ -90,7 +90,13 @@ RUN CODE_PATH="closed/Intel/code/ssd-small/openvino-linux" && \
 
 WORKDIR /mlperf_inference
 
-RUN mkdir build && cd build && \
+RUN sed -i \
+        -e '/IE::ie_cpu_extension/d' \
+        -e 's/${IE_LIBRARY}/${IE_LEGACY_RELEASE_LIBRARY}/g' ./CMakeLists.txt && \
+    sed -i \
+        -e '/#include <ext_list.hpp>/d' \
+        -e '/ie.AddExtension(std::make_shared<Extensions::Cpu::CpuExtensions>(),/,/"CPU");/d' ./backend_ov.h && \
+    mkdir build && cd build && \
     cmake \
         -DLOADGEN_DIR=/mlperf_loadgen \
         -DIE_SRC_DIR=${InferenceEngine_DIR}/../src \
