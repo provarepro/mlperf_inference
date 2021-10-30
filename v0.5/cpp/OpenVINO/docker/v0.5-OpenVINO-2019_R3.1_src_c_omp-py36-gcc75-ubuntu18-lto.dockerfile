@@ -5,7 +5,7 @@ ARG PY_VER="py36"
 ARG GCC_VER="gcc75"
 ARG BASEOS_VER="ubuntu18"
 
-ARG BASE_IMAGE=provarepro/openvino:${OV_VER}_${HW_VER}_${THREAD_VER}-${PY_VER}-${GCC_VER}-${BASEOS_VER}-nomkl
+ARG BASE_IMAGE=provarepro/openvino:${OV_VER}_${HW_VER}_${THREAD_VER}-${PY_VER}-${GCC_VER}-${BASEOS_VER}-lto
 
 FROM openvino/${BASEOS_VER}_dev:${OV_VER} as builder
 
