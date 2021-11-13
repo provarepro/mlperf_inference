@@ -42,10 +42,10 @@ jobs:
               start_commit=""
             fi
             echo "start_commit=${start_commit}" >> $GITHUB_ENV
-      - uses: eWaterCycle/setup-singularity@v6
+      - uses: eWaterCycle/setup-singularity@v7
         if: ${{ env.release_tag != env.latest_tag }}
         with:
-          singularity-version: 3.7.1
+          singularity-version: 3.8.3
       - name: Build the singularity container
         if: ${{ env.release_tag != env.latest_tag }}
         run: |
