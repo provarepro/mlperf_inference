@@ -53,7 +53,7 @@ jobs:
               recipes=$(find . -type f -regextype posix-extended -regex ".*/Singularity(\..*)?")
               #recipes=$(find . -type f \( -name "Singularity.*" -o -name "Singularity" \))
             else
-              recipes=$(git diff --diff-filter=AM --name-only ${start_commit} HEAD | { grep "Singularity" || [[ $? == 1 ]]; })
+              recipes=$(git diff --diff-filter=AMR --name-only ${start_commit} HEAD | { grep "Singularity" || [[ $? == 1 ]]; })
             fi
             image_built="false"
             # For each Singularity* container, build based on the prefix (tag)
