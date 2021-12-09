@@ -34,7 +34,7 @@ jobs:
           singularity-version: 3.8.3
       - name: Build the singularity containers
         run: |
-            recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
+            recipes=$(git diff --diff-filter=AMR --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
             # For each Singularity* container, build based on the prefix (tag)
             for recipe in ${recipes}; do
                 echo "Building ${recipe}"
