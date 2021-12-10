@@ -29,12 +29,12 @@ jobs:
             #fi
             start_commit="$(git rev-list -n 1 origin/main)"
             echo "start_commit=${start_commit}" >> $GITHUB_ENV
-      - uses: eWaterCycle/setup-singularity@v6
+      - uses: eWaterCycle/setup-singularity@v7
         with:
-          singularity-version: 3.7.1
+          singularity-version: 3.8.3
       - name: Build the singularity containers
         run: |
-            recipes=$(git diff --diff-filter=AM --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
+            recipes=$(git diff --diff-filter=AMR --name-only ${start_commit} origin/${{ github.head_ref }} | { grep Singularity || [[ $? == 1 ]]; })
             # For each Singularity* container, build based on the prefix (tag)
             for recipe in ${recipes}; do
                 echo "Building ${recipe}"

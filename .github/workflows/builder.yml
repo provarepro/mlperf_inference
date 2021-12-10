@@ -31,7 +31,7 @@ jobs:
         run: |
             start_commit=${latest_tag}
             if [ "${start_commit}" != "" ]; then
-              WF_FILE_CHANGE=$(git diff --diff-filter=AM --name-only ${start_commit} HEAD | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
+              WF_FILE_CHANGE=$(git diff --diff-filter=AMR --name-only ${start_commit} HEAD | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
               if [ "${WF_FILE_CHANGE}" == "" ]; then
                 # Clean start_commit
                 start_commit=""
@@ -42,10 +42,10 @@ jobs:
               start_commit=""
             fi
             echo "start_commit=${start_commit}" >> $GITHUB_ENV
-      - uses: eWaterCycle/setup-singularity@v6
+      - uses: eWaterCycle/setup-singularity@v7
         if: ${{ env.release_tag != env.latest_tag }}
         with:
-          singularity-version: 3.7.1
+          singularity-version: 3.8.3
       - name: Build the singularity container
         if: ${{ env.release_tag != env.latest_tag }}
         run: |
@@ -53,7 +53,7 @@ jobs:
               recipes=$(find . -type f -regextype posix-extended -regex ".*/Singularity(\..*)?")
               #recipes=$(find . -type f \( -name "Singularity.*" -o -name "Singularity" \))
             else
-              recipes=$(git diff --diff-filter=AM --name-only ${start_commit} HEAD | { grep "Singularity" || [[ $? == 1 ]]; })
+              recipes=$(git diff --diff-filter=AMR --name-only ${start_commit} HEAD | { grep "Singularity" || [[ $? == 1 ]]; })
             fi
             image_built="false"
             # For each Singularity* container, build based on the prefix (tag)
