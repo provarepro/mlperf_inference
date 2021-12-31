@@ -32,7 +32,7 @@ jobs:
             start_commit=${latest_tag}
             if [ "${start_commit}" != "" ]; then
               WF_FILE_CHANGE=$(git diff --diff-filter=AMR --name-only ${start_commit} HEAD | { grep "${WF_NAME}" || [[ $? == 1 ]]; })
-              if [ "${WF_FILE_CHANGE}" == "" ]; then
+              if [ "${WF_FILE_CHANGE}" == "${WF_NAME}" ]; then
                 # Clean start_commit
                 start_commit=""
               fi
