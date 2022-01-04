@@ -1,7 +1,14 @@
-ARG OV_VER="2019_R3.1"
+ARG OV_VER_BUILD="2019_R3.1"
+ARG OV_VER_BASE="2019_pre-release"
+ARG HW_VER="c"
+ARG THREAD_VER="omp"
+ARG PY_VER="py36"
+ARG GCC_VER="gcc75"
 ARG BASEOS_VER="ubuntu18"
 
-FROM openvino/${BASEOS_VER}_dev:${OV_VER} as builder
+ARG BASE_IMAGE=provarepro/openvino:${OV_VER_BASE}_${HW_VER}_${THREAD_VER}-${PY_VER}-${GCC_VER}-${BASEOS_VER}
+
+FROM openvino/${BASEOS_VER}_dev:${OV_VER_BUILD} as builder
 
 WORKDIR /tmp
 
@@ -16,14 +23,6 @@ RUN curl -O https://zenodo.org/record/3401714/files/ssd_mobilenet_v1_quant_ft_no
         --input_shape [1,300,300,3] \
         --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json \
         --tensorflow_object_detection_api_pipeline_config /tmp/pipeline.config
-
-ARG OV_VER="2019_pre-release"
-ARG HW_VER="c"
-ARG THREAD_VER="omp"
-ARG PY_VER="py36"
-ARG GCC_VER="gcc75"
-
-ARG BASE_IMAGE=provarepro/openvino:${OV_VER}_${HW_VER}_${THREAD_VER}-${PY_VER}-${GCC_VER}-${BASEOS_VER}
 
 FROM ${BASE_IMAGE}
 
