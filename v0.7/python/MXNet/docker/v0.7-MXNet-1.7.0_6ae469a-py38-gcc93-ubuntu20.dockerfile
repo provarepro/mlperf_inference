@@ -80,25 +80,35 @@ RUN python${PYTHON_VERSION} -m pip install --ignore-installed --no-cache-dir \
         onnxruntime
 
 # Build MLPerf loader
+ARG LOADER_VER=0.5a0
 ARG MLPERF_LOADER_VER=r0.7
 RUN python${PYTHON_VERSION} -m pip install --ignore-installed --no-cache-dir \
         absl-py \
         pybind11 && \
     git clone \
         --recurse-submodules \
+        --depth 1 \
         --single-branch \
         -b ${MLPERF_LOADER_VER} \
         https://github.com/mlcommons/inference.git /mlperf_inference && \
-    cd /mlperf_inference && \
-    mkdir loadgen/build && cd loadgen/build && \
-    cmake .. && cmake --build . && \
-    cp libmlperf_loadgen.a .. && \
-    rm -r /mlperf_inference/loadgen/build && \
-    cp -r /mlperf_inference/loadgen /mlperf_loadgen && \
+    cd /mlperf_inference/loadgen && \
+    CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel && \
+    python -m pip install \
+        dist/mlperf_loadgen-${LOADER_VER}-*.whl && \
+    rm dist/mlperf_loadgen-${LOADER_VER}-*.whl && \
     rm -rf /mlperf_inference
 
 RUN git clone https://github.com/mlcommons/inference_results_v0.7.git mlperf-inf-res && \
-    cd mlperf-inf-res/closed/Intel/code/resnet/resnet-mx && \
+    mv mlperf-inf-res/closed/Intel/code/resnet/resnet-mx /mlperf_inference && \
+    cd /mlperf_inference && \
     mkdir model && \
     wget -O ./model/resnet50-v1.5.onnx https://zenodo.org/record/2592612/files/resnet50_v1.onnx && \
     python3 tools/onnx2mxnet.py
+
+RUN git clone https://github.com/intel/lp-opt-tool && \
+    cp /mlperf_inference/ilit_calib.patch lp-opt-tool/ && \
+    cd lp-opt-tool && \
+    git checkout c468259 && \
+    git apply ilit_calib.patch && \
+    python setup.py install
+
