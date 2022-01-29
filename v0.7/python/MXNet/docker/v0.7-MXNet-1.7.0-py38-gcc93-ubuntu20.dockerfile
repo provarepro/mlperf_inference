@@ -22,7 +22,9 @@ RUN git clone https://github.com/mlcommons/inference_results_v0.7.git mlperf-inf
     mv mlperf-inf-res/closed/Intel/code/resnet/resnet-mx /mlperf_inference && \
     cd /mlperf_inference && \
     mkdir model && \
-    wget -O ./model/resnet50-v1.5.onnx https://zenodo.org/record/2592612/files/resnet50_v1.onnx && \
+    cd model && \
+    curl -O https://zenodo.org/record/2592612/files/resnet50_v1.onnx && \
+    cd - && \
     python3 tools/onnx2mxnet.py
 
 FROM ${BASE_IMAGE}
