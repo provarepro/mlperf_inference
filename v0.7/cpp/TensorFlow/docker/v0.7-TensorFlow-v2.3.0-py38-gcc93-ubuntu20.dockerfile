@@ -19,6 +19,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        numactl \
+        libtcmalloc-minimal4 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 ARG LOADER_VER=0.5a0
 ARG MLPERF_LOADER_VER=r0.7
 
