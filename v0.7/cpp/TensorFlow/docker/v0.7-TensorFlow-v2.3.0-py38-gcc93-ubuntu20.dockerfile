@@ -44,3 +44,5 @@ RUN python${PYTHON_VERSION} -m pip install --ignore-installed --no-cache-dir \
     rm -r /mlperf_inference/loadgen/build && \
     cp -r /mlperf_inference/loadgen /mlperf_loadgen && \
     rm -rf /mlperf_inference
+
+ENV LD_LIBRARY_PATH=/deps-installation/tf-cc/lib:/opt/opencv/lib:/opt/boost/1_74_0/lib:$LD_LIBRARY_PATH
