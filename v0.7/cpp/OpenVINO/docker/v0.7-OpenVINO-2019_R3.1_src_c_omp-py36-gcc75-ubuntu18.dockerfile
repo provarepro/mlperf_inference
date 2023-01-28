@@ -18,7 +18,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /
 
+# Build Gflags
+RUN git clone https://github.com/gflags/gflags.git && \
+    mkdir gflags/build && cd gflags/build && \
+    cmake .. && make
+
+ENV gflags_DIR=/gflags/build
+
 # Install Boost
+# Build Boost-Filesystem
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         cmake \
@@ -31,15 +39,16 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV BOOST_VERSION="1.71.0" \
-    _BOOST_VERSION="1_71_0"
+ENV BOOST_VERSION="1.72.0" \
+    _BOOST_VERSION="1_72_0"
 
 RUN wget -q https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${_BOOST_VERSION}.tar.gz && \
     tar xf boost_${_BOOST_VERSION}.tar.gz && \
     cd boost_${_BOOST_VERSION} && \
     ./bootstrap.sh --with-libraries=system && \
-    ./b2 --with-system install && \
-    cd / && rm -rf boost_*
+    ./b2 --with-filesystem
+
+ENV BOOST_DIR="/boost_${_BOOST_VERSION}"
 
 # Build MLPerf loader
 ARG MLPERF_LOADER_VER=r0.7
@@ -52,6 +61,7 @@ RUN python${PYTHON_VERSION} -m pip install --ignore-installed --no-cache-dir \
         -b ${MLPERF_LOADER_VER} \
         https://github.com/mlcommons/inference.git /mlperf_inference && \
     cd /mlperf_inference && \
+    git checkout cf15214 && \
     mkdir loadgen/build && cd loadgen/build && \
     cmake .. && cmake --build . && \
     cp libmlperf_loadgen.a .. && \
